@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { requireAuth } = require('../middleware/auth');
-const { getDb } = require('../db/database');
+const { supabase } = require('../db/database');
 const vapiSvc = require('../services/vapi');
 
 router.use(requireAuth);
@@ -10,20 +10,19 @@ const ALLOWED = [
   'personalidad','saludo','objecion','cierre',
 ];
 
-// GET /api/agente
 router.get('/', async (req, res, next) => {
   try {
-    const db = await getDb();
-    const user = await db.get(
-      'SELECT agente_config, vapi_assistant_id, twilio_phone_number FROM users WHERE id = ?',
-      [req.user.id]
-    );
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('agente_config, vapi_assistant_id, twilio_phone_number')
+      .eq('id', req.user.id)
+      .single();
 
-    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+    if (error || !user) return res.status(404).json({ error: 'Usuario no encontrado' });
 
     let agente_config = {};
     try {
-      agente_config = user.agente_config ? JSON.parse(user.agente_config) : {};
+      agente_config = user.agente_config ? (typeof user.agente_config === 'string' ? JSON.parse(user.agente_config) : user.agente_config) : {};
     } catch {
       agente_config = {};
     }
@@ -36,22 +35,27 @@ router.get('/', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// PUT /api/agente
 router.put('/', async (req, res, next) => {
   try {
     const config = Object.fromEntries(
       ALLOWED.filter(k => k in req.body).map(k => [k, req.body[k]])
     );
 
-    const db = await getDb();
     const configStr = JSON.stringify(config);
 
-    // Guardar en la columna nativa
-    await db.run('UPDATE users SET agente_config = ? WHERE id = ?', [configStr, req.user.id]);
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ agente_config: configStr })
+      .eq('id', req.user.id);
 
-    const user = await db.get('SELECT vapi_assistant_id FROM users WHERE id = ?', [req.user.id]);
+    if (updateError) throw updateError;
 
-    // Intentar propagar cambios al servicio de voz si estuviera configurado
+    const { data: user } = await supabase
+      .from('users')
+      .select('vapi_assistant_id')
+      .eq('id', req.user.id)
+      .single();
+
     if (user?.vapi_assistant_id) {
       vapiSvc.updateAssistant(user.vapi_assistant_id, config).catch(() => {});
     }

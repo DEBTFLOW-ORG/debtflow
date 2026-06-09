@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { getDb } = require('../db/database');
+const { supabase } = require('../db/database');
 const { requireAuth } = require('../middleware/auth');
 
 router.post('/login', async (req, res, next) => {
@@ -9,16 +9,18 @@ router.post('/login', async (req, res, next) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email y contraseña requeridos' });
 
-    const db = await getDb();
-    const user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
     
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+    if (error || !user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
     const token = issueToken(user);
-    // Removemos el hash antes de enviarlo al front
-    delete user.password_hash;
+    delete user.password_hash; // Removemos el hash antes de enviarlo
     res.json({ token, user });
   } catch (err) { next(err); }
 });
@@ -30,19 +32,25 @@ router.post('/register', async (req, res, next) => {
       return res.status(400).json({ error: 'Datos inválidos (password min 8 caracteres)' });
     }
 
-    const db = await getDb();
-    const existente = await db.get('SELECT id FROM users WHERE email = ?', [email]);
+    const { data: existente } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
+
     if (existente) return res.status(400).json({ error: 'El email ya está registrado' });
 
     const hash = await bcrypt.hash(password, 10);
     const userId = 'usr_' + Date.now();
 
-    await db.run(
-      'INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)',
-      [userId, email, hash]
-    );
+    const { data: newUser, error } = await supabase
+      .from('users')
+      .insert([{ id: userId, email, password_hash: hash }])
+      .select('id, email, role, plan, twilio_phone_number')
+      .single();
 
-    const newUser = await db.get('SELECT id, email, role, plan, twilio_phone_number FROM users WHERE id = ?', [userId]);
+    if (error) throw error;
+
     const token = issueToken(newUser);
     res.status(201).json({ token, user: newUser });
   } catch (err) { next(err); }
@@ -50,8 +58,13 @@ router.post('/register', async (req, res, next) => {
 
 router.get('/me', requireAuth, async (req, res, next) => {
   try {
-    const db = await getDb();
-    const user = await db.get('SELECT id, email, role, plan, twilio_phone_number FROM users WHERE id = ?', [req.user.id]);
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, email, role, plan, twilio_phone_number')
+      .eq('id', req.user.id)
+      .single();
+
+    if (error) throw error;
     res.json(user);
   } catch (err) { next(err); }
 });

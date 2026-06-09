@@ -62,4 +62,21 @@ async function buyPhoneNumber(subSid, encryptedToken) {
   return purchased.phoneNumber;
 }
 
-module.exports = { createSubAccount, buyPhoneNumber, encrypt, decrypt };
+// Añadir esta función en backend/services/twilio.js
+async function iniciarLlamada(subSid, encryptedToken, fromNumber, toNumber, twimlUrl) {
+  // 1. Desencriptar el token de la sub-cuenta para autenticarse como ese usuario
+  const authToken = decrypt(encryptedToken);
+  const client = twilio(subSid, authToken);
+
+  // 2. Disparar la llamada
+  const call = await client.calls.create({
+    url: twimlUrl, // El endpoint o webhook en tu backend que devolverá el XML o conectará con Vapi
+    to: toNumber,
+    from: fromNumber
+  });
+
+  return call;
+}
+
+// Actualizar el module.exports al final del archivo
+module.exports = { createSubAccount, buyPhoneNumber, encrypt, decrypt, iniciarLlamada };

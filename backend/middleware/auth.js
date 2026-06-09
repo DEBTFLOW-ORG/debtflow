@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { getDb } = require('../db/database');
+const { supabase } = require('../db/database');
 
 async function requireAuth(req, res, next) {
   const header = req.headers.authorization;
@@ -11,11 +11,13 @@ async function requireAuth(req, res, next) {
     const token = header.slice(7);
     const payload = jwt.verify(token, process.env.JWT_SECRET || 'clave_desarrollo_local');
     
-    // Consultamos el usuario en SQLite para tener sus datos y rol actualizados
-    const db = await getDb();
-    const user = await db.get('SELECT id, email, role, plan FROM users WHERE id = ?', [payload.sub]);
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, email, role, plan')
+      .eq('id', payload.sub)
+      .single();
 
-    if (!user) return res.status(401).json({ error: 'Usuario no encontrado' });
+    if (error || !user) return res.status(401).json({ error: 'Usuario no encontrado' });
     req.user = user;
     next();
   } catch {

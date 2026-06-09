@@ -1,0 +1,28 @@
+# ============================================
+# Agente de Voz IA - Dependencias
+# ============================================
+
+# Servidor web
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+
+# OpenAI - LLM + Whisper STT
+openai>=1.35.0
+
+# Twilio - Llamadas telefónicas
+twilio>=9.0.0
+
+# ElevenLabs - TTS (usamos httpx directamente, pero la SDK opcional está disponible)
+# elevenlabs>=1.0.0  # Descomenta si prefieres usar la SDK oficial
+
+# Audio - Procesamiento de audio
+pydub>=0.25.1
+
+# Utilidades
+httpx>=0.27.0
+python-dotenv>=1.0.0
+
+# Opcional: para mejor rendimiento en producción
+# gunicorn>=21.0.0  # WSGI server para producción
+# websockets>=12.0  # Ya incluido en uvicorn[standard]
