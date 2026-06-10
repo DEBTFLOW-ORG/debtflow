@@ -64,7 +64,7 @@ const { data: usuario, error } = await supabase
       usuario.twilio_auth_token,
       usuario.twilio_phone_number,
       telefono_destino,
-      url_python_agent
+      'https://lorinda-nonevaporating-steven.ngrok-free.dev/'
     );
 
     res.json({ ok: true, mensaje: 'Llamada en curso', callSid: call.sid });

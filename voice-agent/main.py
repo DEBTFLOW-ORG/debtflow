@@ -36,6 +36,9 @@ import tempfile
 import time
 from typing import Dict
 
+import os
+os.environ["PATH"] += os.pathsep + r"C:\Users\lucio\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg.Essentials_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.1.1-essentials_build\bin"
+
 import httpx
 import uvicorn
 from fastapi import FastAPI, Header, HTTPException, Request, WebSocket, WebSocketDisconnect

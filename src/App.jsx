@@ -596,15 +596,41 @@ const llamarDeudor = async (deudor) => {
     setModal(true);
   };
 
-  const save = () => {
+const save = async () => {
     if (!form.nombre||!form.tel||!form.monto) return;
-    const data = { ...form, monto:parseFloat(form.monto), intentos: editando ? (deudores.find(d=>d.id===editando)?.intentos||0) : 0 };
-    if (editando) {
-      setDeudores(p=>p.map(d=>d.id===editando ? { ...d, ...data, id:d.id } : d));
-    } else {
-      setDeudores(p=>[...p, { ...data, id:Date.now() }]);
+    
+    const data = { 
+      ...form, 
+      monto: parseFloat(form.monto), 
+      intentos: editando ? (deudores.find(d=>d.id===editando)?.intentos||0) : 0 
+    };
+
+    try {
+      if (editando) {
+        // Hace el PUT a la base de datos
+        await deudoresApi.update(editando, data);
+        setDeudores(p=>p.map(d=>d.id===editando ? { ...d, ...data } : d));
+      } else {
+        // Hace el POST a la base de datos
+        await deudoresApi.create(data);
+        // Refresca la lista para traer el UUID real que generó Supabase
+        const listaActualizada = await deudoresApi.list();
+        setDeudores(listaActualizada);
+      }
+      setModal(false);
+    } catch (err) {
+      alert("Error al guardar en la base de datos: " + err);
     }
-    setModal(false);
+  };
+
+  const eliminarDeudor = async (id, nombre) => {
+    if (!window.confirm(`¿Seguro que querés eliminar a ${nombre}?`)) return;
+    try {
+      await deudoresApi.remove(id); // Borra de la BD
+      setDeudores(p => p.filter(x => x.id !== id)); // Quita de la pantalla
+    } catch (err) {
+      alert("Error al eliminar: " + err);
+    }
   };
 
   const filtered = deudores.filter(d=>
@@ -659,9 +685,9 @@ const llamarDeudor = async (deudor) => {
                       </svg>
                     </button>
                     <button className="btn btn-outline btn-sm" onClick={()=>openEditar(d)}>Editar</button>
-                    <button className="btn btn-danger btn-sm" onClick={()=>setDeudores(p=>p.filter(x=>x.id!==d.id))} aria-label={`Eliminar ${d.nombre}`}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-                </button>
+                    <button className="btn btn-danger btn-sm" onClick={() => eliminarDeudor(d.id, d.nombre)} aria-label={`Eliminar ${d.nombre}`}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                    </button>
                   </div>
                 </td>
               </tr>

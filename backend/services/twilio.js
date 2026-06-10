@@ -64,15 +64,19 @@ async function buyPhoneNumber(subSid, encryptedToken) {
 
 // Añadir esta función en backend/services/twilio.js
 async function iniciarLlamada(subSid, encryptedToken, fromNumber, toNumber, twimlUrl) {
-  // 1. Desencriptar el token de la sub-cuenta para autenticarse como ese usuario
-  const authToken = decrypt(encryptedToken);
-  const client = twilio(subSid, authToken);
+  // 1. Leemos las variables del .env y usamos .trim() para limpiar espacios invisibles o saltos de línea (típico en Windows)
+  const sid = process.env.TWILIO_MASTER_ACCOUNT_SID.trim();
+  const token = process.env.TWILIO_MASTER_AUTH_TOKEN.trim();
+  const phone = process.env.TWILIO_PHONE_NUMBER.trim();
 
-  // 2. Disparar la llamada
+  // 2. Autenticamos directamente con la cuenta maestra limpia
+  const client = twilio(sid, token);
+
+  // 3. Disparamos la llamada
   const call = await client.calls.create({
-    url: twimlUrl, // El endpoint o webhook en tu backend que devolverá el XML o conectará con Vapi
+    url: twimlUrl, 
     to: toNumber,
-    from: fromNumber
+    from: phone
   });
 
   return call;
