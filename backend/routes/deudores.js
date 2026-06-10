@@ -6,6 +6,10 @@ router.use(requireAuth);
 
 const ALLOWED = ['nombre','tel','monto','acreedor','estado','llamar_auto','frecuencia','hora','dias_semana','max_intentos','notas'];
 
+// Función de limpieza de datos
+const pick = (obj, keys) => Object.fromEntries(keys.filter(k => k in obj).map(k => [k, obj[k]]));
+
+// GET - Listar todos los deudores
 router.get('/', async (req, res, next) => {
   try {
     const { data: rows, error } = await supabase
@@ -15,53 +19,72 @@ router.get('/', async (req, res, next) => {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-
-    const data = rows.map(r => ({
-      ...r,
-      llamar_auto: Boolean(r.llamar_auto),
-      // Nos aseguramos de parsear si Supabase lo devuelve como string
-      dias_semana: r.dias_semana ? (typeof r.dias_semana === 'string' ? JSON.parse(r.dias_semana) : r.dias_semana) : []
-    }));
-    res.json(data);
+    
+    // Supabase devuelve los booleanos y arrays tal cual son, no hace falta parsear nada
+    res.json(rows);
   } catch (e) { next(e); }
 });
 
+// POST - Crear nuevo deudor
 router.post('/', async (req, res, next) => {
   try {
     const body = pick(req.body, ALLOWED);
-    if (!body.nombre || !body.tel || !body.monto) return res.status(400).json({ error: 'Faltan campos obligatorios' });
-
-    // Dejamos que Supabase genere el 'id' automáticamente
-    const diasStr = JSON.stringify(body.dias_semana || []);
+    if (!body.nombre || !body.tel || !body.monto) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    }
 
     const { data: nuevo, error } = await supabase
       .from('deudores')
       .insert([{
-
-      user_id: req.user.id,
-      nombre: body.nombre,
-      tel: body.tel,
-      monto: Number(body.monto),
-      acreedor: body.acreedor,
-      estado: body.estado || 'pendiente',
-      llamar_auto: body.llamar_auto ? 1 : 0,
-      frecuencia: body.frecuencia,
-      hora: body.hora,
-      dias_semana: diasStr
-    }])
-    .select('*')
-    .single();
+        user_id: req.user.id,
+        nombre: body.nombre,
+        tel: body.tel,
+        monto: Number(body.monto),
+        acreedor: body.acreedor,
+        estado: body.estado || 'pendiente',
+        llamar_auto: Boolean(body.llamar_auto), // Enviamos true/false
+        frecuencia: body.frecuencia,
+        hora: body.hora,
+        dias_semana: body.dias_semana || []     // Enviamos el array nativo
+      }])
+      .select('*')
+      .single();
 
     if (error) throw error;
-
-    res.status(201).json({ 
-      ...nuevo, 
-      llamar_auto: Boolean(nuevo.llamar_auto), 
-      dias_semana: typeof nuevo.dias_semana === 'string' ? JSON.parse(nuevo.dias_semana) : nuevo.dias_semana
-    });
-  } catch (e) { next(e); }
+    res.status(201).json(nuevo);
+  } catch (e) { 
+    console.error("Error en POST /deudores:", e);
+    next(e); 
+  }
 });
 
+// PUT - Editar un deudor existente
+router.put('/:id', async (req, res, next) => {
+  try {
+    const body = pick(req.body, ALLOWED);
+    
+    // Nos aseguramos de formatear correctamente los números y booleanos
+    const payload = { ...body };
+    if (payload.monto !== undefined) payload.monto = Number(payload.monto);
+    if (payload.llamar_auto !== undefined) payload.llamar_auto = Boolean(payload.llamar_auto);
+    
+    const { data: actualizado, error } = await supabase
+      .from('deudores')
+      .update(payload)
+      .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    res.json(actualizado);
+  } catch (e) { 
+    console.error("Error en PUT /deudores:", e);
+    next(e); 
+  }
+});
+
+// DELETE - Borrar deudor
 router.delete('/:id', async (req, res, next) => {
   try {
     const { error } = await supabase
@@ -75,5 +98,4 @@ router.delete('/:id', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-const pick = (obj, keys) => Object.fromEntries(keys.filter(k => k in obj).map(k => [k, obj[k]]));
 module.exports = router;

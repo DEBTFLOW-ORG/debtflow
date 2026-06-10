@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { supabase } = require('../db/database');
 const { requireAuth } = require('../middleware/auth');
+const twilioSvc = require('../services/twilio');
 
 router.post('/login', async (req, res, next) => {
   try {
@@ -40,15 +41,44 @@ router.post('/register', async (req, res, next) => {
 
     if (existente) return res.status(400).json({ error: 'El email ya está registrado' });
 
-const hash = await bcrypt.hash(password, 10);
+    const hash = await bcrypt.hash(password, 10);
 
-// Dejamos que Supabase genere el 'id' automáticamente
-const { data: newUser, error } = await supabase
-  .from('users')
-  .insert([{ email, password_hash: hash }])
-  .select('id, email, role, plan, twilio_phone_number')
-  .single();
+    // 1. Dejamos que Supabase genere el 'id' automáticamente y creamos el usuario
+    const { data: newUser, error } = await supabase
+      .from('users')
+      .insert([{ email, password_hash: hash }])
+      .select('id, email, role, plan, twilio_phone_number')
+      .single();
+      
     if (error) throw error;
+
+    // 2. Usamos directamente TUS credenciales maestras (sin crear subcuentas)
+    try {
+      const masterSid = process.env.TWILIO_MASTER_ACCOUNT_SID;
+      const masterToken = process.env.TWILIO_MASTER_AUTH_TOKEN;
+      const masterPhone = process.env.TWILIO_PHONE_NUMBER;
+
+      // Encriptamos el token para guardarlo seguro
+      const encToken = twilioSvc.encrypt(masterToken);
+
+      // Guardamos tus datos maestros en el usuario
+      const { data: updatedUser } = await supabase
+        .from('users')
+        .update({
+          twilio_account_sid: masterSid,
+          twilio_auth_token: encToken,
+          twilio_phone_number: masterPhone
+        })
+        .eq('id', newUser.id)
+        .select('id, email, role, plan, twilio_phone_number')
+        .single();
+
+      if (updatedUser) {
+        newUser.twilio_phone_number = updatedUser.twilio_phone_number;
+      }
+    } catch (twilioErr) {
+      console.error("Error asignando Twilio:", twilioErr);
+    }
 
     const token = issueToken(newUser);
     res.status(201).json({ token, user: newUser });

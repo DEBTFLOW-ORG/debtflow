@@ -709,15 +709,44 @@ const llamarDeudor = async (deudor) => {
 
 // ─── AGENTE ──────────────────────────────────────────────────────
 function Agente() {
-  const [cfg,setCfg]=useState({
-    nombre:"Valentina",tono:"profesional",voz:"nova",idioma:"es-AR",modelo:"gpt-4o",apiKey:"",
-    personalidad:"Soy un agente de cobranzas profesional y empático. Mi objetivo es llegar a un acuerdo de pago.",
-    saludo:"Buenos días, ¿hablo con {nombre_deudor}? Le llamo de parte de {acreedor}.",
-    objecion:"Entiendo su situación. ¿Podríamos acordar un plan de pagos?",
-    cierre:"Gracias, quedamos en que realizará el pago el {fecha}. ¡Buen día!",
+  const [cfg, setCfg] = useState({
+    nombre: "Valentina", tono: "profesional", voz: "nova", idioma: "es-AR", modelo: "gpt-4o", apiKey: "",
+    personalidad: "Soy un agente de cobranzas profesional y empático. Mi objetivo es llegar a un acuerdo de pago.",
+    saludo: "Buenos días, ¿hablo con {nombre_deudor}? Le llamo de parte de {acreedor}.",
+    objecion: "Entiendo su situación. ¿Podríamos acordar un plan de pagos?",
+    cierre: "Gracias, quedamos en que realizará el pago el {fecha}. ¡Buen día!",
   });
-  const [saved,setSaved]=useState(false);
-  const s=k=>e=>setCfg(c=>({...c,[k]:e.target.value}));
+  
+  const [saved, setSaved] = useState(false);
+  const [loadingConfig, setLoadingConfig] = useState(true);
+
+  // 1. Obtener la config de la base de datos al cargar la pantalla
+  useEffect(() => {
+    agenteApi.get().then(data => {
+      if (data.agente_config && Object.keys(data.agente_config).length > 0) {
+        setCfg(c => ({ ...c, ...data.agente_config }));
+      }
+      setLoadingConfig(false);
+    }).catch(err => {
+      console.error("Error cargando agente:", err);
+      setLoadingConfig(false);
+    });
+  }, []);
+
+  const s = k => e => setCfg(c => ({...c, [k]: e.target.value}));
+
+  // 2. Guardar la config en la base de datos
+  const guardarConfig = async () => {
+    try {
+      await agenteApi.save(cfg);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      alert("Error al guardar la configuración: " + err);
+    }
+  };
+
+  if (loadingConfig) return <div style={{ color: C.textMid, padding: 20 }}>Cargando cerebro de la IA...</div>;
 
   return (
     <div className="fade-up" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
@@ -757,13 +786,8 @@ function Agente() {
             <select value={cfg.modelo} onChange={s("modelo")}>
               <option value="gpt-4o">GPT-4o (recomendado)</option>
               <option value="gpt-4o-mini">GPT-4o Mini (económico)</option>
-              <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
             </select>
           </Field>
-          <div style={{background:C.brandBg,borderRadius:8,padding:"10px 14px",fontSize:12,color:C.brandText,border:`1px solid rgba(79,142,247,0.2)`,display:"flex",gap:8,alignItems:"flex-start"}}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{flexShrink:0,marginTop:1}}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            Tu subcuenta de Twilio se crea automáticamente al registrarte. Solo configurá el modelo y la voz.
-          </div>
         </div>
       </div>
       <div className="card-padded">
@@ -776,7 +800,8 @@ function Agente() {
         {[["personalidad","Personalidad del agente",4],["saludo","Saludo inicial",3],["objecion","Manejo de objeciones",3],["cierre","Cierre",2]].map(([k,lbl,rows])=>(
           <Field key={k} label={lbl}><textarea rows={rows} value={cfg[k]} onChange={s(k)} style={{resize:"vertical",lineHeight:1.6}} /></Field>
         ))}
-        <button className="btn btn-primary" style={{width:"100%",marginTop:6}} onClick={()=>{setSaved(true);setTimeout(()=>setSaved(false),2500);}}>
+        {/* BOTÓN CONECTADO AL BACKEND */}
+        <button className="btn btn-primary" style={{width:"100%",marginTop:6}} onClick={guardarConfig}>
           {saved
             ? <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Guardado</>
             : "Guardar configuración"
