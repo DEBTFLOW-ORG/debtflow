@@ -51,8 +51,25 @@ router.post('/test', async (req, res, next) => {
       return res.status(400).json({ error: 'Faltan parámetros: telefono_destino o url_python_agent' });
     }
 
-    // Iniciamos la llamada con Twilio
-    const call = await twilioSvc.iniciarLlamadaPrueba(telefono_destino, url_python_agent);
+    // 1. Buscamos las credenciales de Twilio del usuario logueado en Supabase
+    const { data: usuario, error } = await supabase
+      .from('users')
+      .select('twilio_sub_sid, twilio_auth_token, twilio_phone_number')
+      .eq('id', req.user.id)
+      .single();
+
+    if (error || !usuario || !usuario.twilio_phone_number) {
+      return res.status(400).json({ error: 'Tu usuario no tiene un número de Twilio configurado en la base de datos.' });
+    }
+
+    // 2. Iniciamos la llamada con la función correcta (iniciarLlamada)
+    const call = await twilioSvc.iniciarLlamada(
+      usuario.twilio_sub_sid,
+      usuario.twilio_auth_token,
+      usuario.twilio_phone_number,
+      telefono_destino,
+      url_python_agent
+    );
 
     res.json({ ok: true, mensaje: 'Llamada en curso', callSid: call.sid });
   } catch (e) { 

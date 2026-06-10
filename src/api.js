@@ -47,6 +47,7 @@ export const campanasApi = {
 
 export const llamadasApi = {
   list: () => api.get('/llamadas'),
+  test: (body) => api.post('/llamadas/test', body),
 };
 
 export const agenteApi = {

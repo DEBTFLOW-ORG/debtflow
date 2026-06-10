@@ -563,6 +563,27 @@ function Deudores({ deudores, setDeudores }) {
   const [form,     setForm]     = useState(FORM_EMPTY);
   const [search,   setSearch]   = useState("");
 
+const llamarDeudor = async (deudor) => {
+    // Busca si ya habías ingresado una URL de ngrok antes
+    let urlGuardada = localStorage.getItem("ngrok_url") || "";
+    const urlNgrok = prompt(`Vas a llamar a ${deudor.nombre}. Ingresá/Confirmá tu URL de Ngrok:`, urlGuardada);
+    
+    if(!urlNgrok) return;
+    
+    // Guarda la URL para la próxima llamada
+    localStorage.setItem("ngrok_url", urlNgrok);
+
+    try {
+      await llamadasApi.test({ 
+        telefono_destino: deudor.tel, 
+        url_python_agent: urlNgrok 
+      });
+      alert(`¡Llamada en curso a ${deudor.tel}! Mirá la consola de Python.`);
+    } catch (err) { 
+      alert("Error: " + err); 
+    }
+  };
+
   const openNuevo = () => {
     setEditando(null);
     setForm(FORM_EMPTY);
@@ -632,6 +653,11 @@ function Deudores({ deudores, setDeudores }) {
                 </td>
                 <td>
                   <div style={{display:"flex",gap:6}}>
+                    <button className="btn btn-success btn-sm" onClick={() => llamarDeudor(d)} title="Llamar ahora">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.1 10.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/>
+                      </svg>
+                    </button>
                     <button className="btn btn-outline btn-sm" onClick={()=>openEditar(d)}>Editar</button>
                     <button className="btn btn-danger btn-sm" onClick={()=>setDeudores(p=>p.filter(x=>x.id!==d.id))} aria-label={`Eliminar ${d.nombre}`}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
