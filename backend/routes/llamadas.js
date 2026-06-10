@@ -41,4 +41,23 @@ router.get('/', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+const twilioSvc = require('../services/twilio');
+
+router.post('/test', async (req, res, next) => {
+  try {
+    const { telefono_destino, url_python_agent } = req.body;
+
+    if (!telefono_destino || !url_python_agent) {
+      return res.status(400).json({ error: 'Faltan parámetros: telefono_destino o url_python_agent' });
+    }
+
+    // Iniciamos la llamada con Twilio
+    const call = await twilioSvc.iniciarLlamadaPrueba(telefono_destino, url_python_agent);
+
+    res.json({ ok: true, mensaje: 'Llamada en curso', callSid: call.sid });
+  } catch (e) { 
+    next(e); 
+  }
+});
+
 module.exports = router;
