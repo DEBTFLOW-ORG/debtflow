@@ -40,15 +40,14 @@ router.post('/register', async (req, res, next) => {
 
     if (existente) return res.status(400).json({ error: 'El email ya está registrado' });
 
-    const hash = await bcrypt.hash(password, 10);
-    const userId = 'usr_' + Date.now();
+const hash = await bcrypt.hash(password, 10);
 
-    const { data: newUser, error } = await supabase
-      .from('users')
-      .insert([{ id: userId, email, password_hash: hash }])
-      .select('id, email, role, plan, twilio_phone_number')
-      .single();
-
+// Dejamos que Supabase genere el 'id' automáticamente
+const { data: newUser, error } = await supabase
+  .from('users')
+  .insert([{ email, password_hash: hash }])
+  .select('id, email, role, plan, twilio_phone_number')
+  .single();
     if (error) throw error;
 
     const token = issueToken(newUser);

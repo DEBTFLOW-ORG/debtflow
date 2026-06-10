@@ -1,14 +1,11 @@
 const router = require('express').Router();
 const crypto = require('crypto');
-const { getDb } = require('../db/database');
+const { supabase } = require('../db/database');
 const logger = require('../utils/logger');
 
-// Raw body para verificar firma HMAC de Vapi
 router.use(require('express').raw({ type: 'application/json' }));
 
-// POST /webhooks/vapi
 router.post('/vapi', async (req, res) => {
-  // 1. Verificar firma
   const sig = req.headers['x-vapi-signature'];
   if (!verifySignature(req.body, sig)) {
     logger.warn('Webhook: firma inválida');
@@ -38,29 +35,25 @@ router.post('/vapi', async (req, res) => {
     const duracion = Math.round(message.durationSeconds || 0);
     const nota = message.analysis?.summary || '';
 
-    const db = await getDb();
-    
-    // Buscar la llamada correspondiente en SQLite
-    const llamada = await db.get('SELECT id, deudor_id FROM llamadas WHERE vapi_call_id = ?', [vapiCallId]);
+    // Buscar llamada en Supabase
+    const { data: llamada } = await supabase
+      .from('llamadas')
+      .select('id, deudor_id')
+      .eq('vapi_call_id', vapiCallId)
+      .maybeSingle();
 
     if (llamada) {
-      await db.run(`
-        UPDATE llamadas 
-        SET resultado = ?, sentimiento = ?, duracion_seg = ?, transcripcion = ?, nota = ?, finalizada_at = ?
-        WHERE id = ?
-      `, [
+      await supabase.from('llamadas').update({
         resultado,
         sentimiento,
-        duracion,
-        JSON.stringify(transcript), // Guardamos transcripción como string JSON plano
+        duracion_seg: duracion,
+        transcripcion: transcript, 
         nota,
-        new Date().toISOString(),
-        llamada.id
-      ]);
+        finalizada_at: new Date().toISOString()
+      }).eq('id', llamada.id);
 
-      // Actualizar estado del deudor
       if (llamada.deudor_id && resultado && resultado !== 'error') {
-        await db.run('UPDATE deudores SET estado = ? WHERE id = ?', [resultado, llamada.deudor_id]);
+        await supabase.from('deudores').update({ estado: resultado }).eq('id', llamada.deudor_id);
       }
     }
 
@@ -72,38 +65,22 @@ router.post('/vapi', async (req, res) => {
   }
 });
 
-// ── Helpers ───────────────────────────────────────────────────────
+// Helpers se mantienen igual
 function verifySignature(rawBody, sig) {
   if (!sig || !process.env.VAPI_WEBHOOK_SECRET) return false;
-  const expected = crypto
-    .createHmac('sha256', process.env.VAPI_WEBHOOK_SECRET)
-    .update(rawBody)
-    .digest('hex');
-  try {
-    return crypto.timingSafeEqual(
-      Buffer.from(sig, 'hex'),
-      Buffer.from(expected, 'hex')
-    );
-  } catch {
-    return false;
-  }
+  const expected = crypto.createHmac('sha256', process.env.VAPI_WEBHOOK_SECRET).update(rawBody).digest('hex');
+  try { return crypto.timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expected, 'hex')); } catch { return false; }
 }
-
 function parseTranscript(raw) {
   if (!Array.isArray(raw)) return [];
-  return raw.map(turn => ({
-    quien: turn.role === 'assistant' ? 'agente' : 'deudor',
-    texto: turn.transcript || turn.message || '',
-  })).filter(t => t.texto);
+  return raw.map(t => ({ quien: t.role === 'assistant' ? 'agente' : 'deudor', texto: t.transcript || t.message || '' })).filter(t => t.texto);
 }
-
 function inferSentimiento(summary = '') {
   const s = summary.toLowerCase();
   if (/positiv|pagará|acepta|acuerdo|conform/.test(s)) return 'positivo';
   if (/negativ|enojad|rechaz|no quiere|molest/.test(s)) return 'negativo';
   return 'neutro';
 }
-
 function inferResultado(evaluation = '', endedReason = '') {
   const e = String(evaluation).toLowerCase();
   const r = String(endedReason).toLowerCase();

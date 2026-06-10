@@ -31,26 +31,26 @@ router.post('/', async (req, res, next) => {
     const body = pick(req.body, ALLOWED);
     if (!body.nombre || !body.tel || !body.monto) return res.status(400).json({ error: 'Faltan campos obligatorios' });
 
-    const id = 'deu_' + Date.now();
+    // Dejamos que Supabase genere el 'id' automáticamente
     const diasStr = JSON.stringify(body.dias_semana || []);
 
     const { data: nuevo, error } = await supabase
       .from('deudores')
       .insert([{
-        id,
-        user_id: req.user.id,
-        nombre: body.nombre,
-        tel: body.tel,
-        monto: Number(body.monto),
-        acreedor: body.acreedor,
-        estado: body.estado || 'pendiente',
-        llamar_auto: body.llamar_auto ? 1 : 0,
-        frecuencia: body.frecuencia,
-        hora: body.hora,
-        dias_semana: diasStr
-      }])
-      .select('*')
-      .single();
+
+      user_id: req.user.id,
+      nombre: body.nombre,
+      tel: body.tel,
+      monto: Number(body.monto),
+      acreedor: body.acreedor,
+      estado: body.estado || 'pendiente',
+      llamar_auto: body.llamar_auto ? 1 : 0,
+      frecuencia: body.frecuencia,
+      hora: body.hora,
+      dias_semana: diasStr
+    }])
+    .select('*')
+    .single();
 
     if (error) throw error;
 
