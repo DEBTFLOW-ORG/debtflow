@@ -1,12 +1,11 @@
 const router = require('express').Router();
 const { requireAuth } = require('../middleware/auth');
 const { supabase } = require('../db/database');
-const vapiSvc = require('../services/vapi');
 
 router.use(requireAuth);
 
 const ALLOWED = [
-  'nombre','tono','voz','idioma','modelo',
+  'nombre','voice_id','tono','idioma',
   'personalidad','saludo','objecion','cierre',
 ];
 
@@ -49,16 +48,6 @@ router.put('/', async (req, res, next) => {
       .eq('id', req.user.id);
 
     if (updateError) throw updateError;
-
-    const { data: user } = await supabase
-      .from('users')
-      .select('vapi_assistant_id')
-      .eq('id', req.user.id)
-      .single();
-
-    if (user?.vapi_assistant_id) {
-      vapiSvc.updateAssistant(user.vapi_assistant_id, config).catch(() => {});
-    }
 
     res.json({ ok: true });
   } catch (e) { next(e); }

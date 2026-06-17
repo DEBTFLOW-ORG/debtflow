@@ -38,7 +38,7 @@ class ElevenLabsService:
             voice_id: ID de voz opcional (usa el default si no se especifica)
 
         Returns:
-            Audio en formato bytes (MP3)
+            Audio en formato μ-law 8 kHz, listo para Twilio
         """
         voice = voice_id or self.voice_id
 
@@ -60,7 +60,13 @@ class ElevenLabsService:
 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
-                    url, headers=self.headers, json=payload
+                    url,
+                    headers=self.headers,
+                    params={
+                        "output_format": "ulaw_8000",
+                        "optimize_streaming_latency": 3,
+                    },
+                    json=payload,
                 )
                 response.raise_for_status()
 

@@ -84,7 +84,7 @@ export default function LoginPage() {
             </div>
             <div>
               <div style={{ fontFamily:F.display, fontWeight:700, fontSize:20, color:'#fff', letterSpacing:'-0.02em' }}>Debtflow</div>
-              <div style={{ fontSize:11, color:C.textLight, letterSpacing:'0.05em' }}>AI COLLECTIONS</div>
+              <div style={{ fontSize:11, color:C.textLight, letterSpacing:'0.05em' }}>GESTIÓN DE COBRANZAS</div>
             </div>
           </div>
 
@@ -94,13 +94,13 @@ export default function LoginPage() {
           <p style={{ fontSize:13, color:C.textLight, marginBottom:28 }}>
             {mode === 'login'
               ? 'Ingresá tus credenciales para continuar'
-              : 'Tu número de Twilio se configura automáticamente'}
+              : 'Tu servicio telefónico se configura automáticamente'}
           </p>
 
           <form onSubmit={submit}>
             <div style={{ marginBottom:14 }}>
               <label style={{ fontSize:11, color:C.textMid, fontWeight:600, letterSpacing:'0.05em', textTransform:'uppercase', display:'block', marginBottom:6 }}>
-                Email
+                Correo electrónico
               </label>
               <input
                 className="login-input"
@@ -154,7 +154,7 @@ export default function LoginPage() {
           {mode === 'register' && (
             <div style={{ background:C.brandBg, border:`1px solid rgba(79,142,247,0.2)`, borderRadius:8, padding:'10px 14px', fontSize:12, color:C.brandText, marginTop:16, display:'flex', gap:8, alignItems:'center' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}><polyline points="20 6 9 17 4 12"/></svg>
-              Al registrarte se te asigna automáticamente un número de Twilio y un agente IA.
+              Al registrarte se te asigna automáticamente un número telefónico y un asistente de voz.
             </div>
           )}
 

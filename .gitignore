@@ -9,6 +9,8 @@ pnpm-debug.log*
 # Dependencias
 node_modules
 backend/node_modules
+voice-agent/venv/
+venv/
 
 # Compilados de Vite
 dist
@@ -24,8 +26,19 @@ backend/*.db
 .env.*
 backend/.env
 backend/.env.*
+voice-agent/.env
+voice-agent/.env.*
 !.env.example
 !backend/.env.example
+!voice-agent/.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
 # Editores y OS
 .vscode/*

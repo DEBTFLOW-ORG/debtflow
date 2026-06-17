@@ -1,6 +1,6 @@
 const cron = require('node-cron');
 const { supabase } = require('../db/database');
-const vapiSvc = require('./vapi');
+const twilioSvc = require('./twilio');
 const logger = require('../utils/logger');
 
 // Frecuencia → minutos mínimos entre intentos
@@ -28,7 +28,13 @@ function init() {
         .from('deudores')
         .select(`
           *,
-          users!inner (twilio_phone_number, vapi_assistant_id, agente_config, plan)
+          users!inner (
+            twilio_account_sid,
+            twilio_auth_token,
+            twilio_phone_number,
+            agente_config,
+            plan
+          )
         `)
         .eq('llamar_auto', true)
         .neq('estado', 'cancelado');
@@ -52,25 +58,35 @@ function init() {
 
           const userVars = d.users; // Relación anidada de Supabase
 
-          if (!userVars?.vapi_assistant_id || !userVars?.twilio_phone_number) {
-            logger.warn(`Usuario sin Twilio/Vapi configurado: ${d.user_id}`);
+          const voiceAgentUrl = process.env.VOICE_AGENT_URL?.trim().replace(/\/+$/, '');
+          if (!userVars?.twilio_phone_number || !voiceAgentUrl) {
+            logger.warn(`Usuario sin servicio telefónico configurado: ${d.user_id}`);
             continue;
           }
 
           logger.info(`Llamando a ${d.nombre} (${d.tel})`);
 
-          await vapiSvc.makeCall({
-            assistantId: userVars.vapi_assistant_id,
-            toNumber: d.tel,
-            fromNumber: userVars.twilio_phone_number,
-            metadata: {
-              nombre_deudor: d.nombre,
-              acreedor: d.acreedor || '',
-              monto: d.monto,
-              deudor_id: d.id,
-              user_id: d.user_id,
-            },
-          });
+          const agenteConfig = typeof userVars.agente_config === 'string'
+            ? JSON.parse(userVars.agente_config || '{}')
+            : (userVars.agente_config || {});
+          const callConfig = {
+            ...agenteConfig,
+            nombre_deudor: d.nombre,
+            acreedor: d.acreedor || '',
+            monto: d.monto,
+          };
+          const configToken = Buffer
+            .from(JSON.stringify(callConfig), 'utf8')
+            .toString('base64url');
+          const twimlUrl = `${voiceAgentUrl}/voice?config=${encodeURIComponent(configToken)}`;
+
+          await twilioSvc.iniciarLlamada(
+            userVars.twilio_account_sid,
+            userVars.twilio_auth_token,
+            userVars.twilio_phone_number,
+            d.tel,
+            twimlUrl
+          );
 
           // Insertar llamada
           await supabase.from('llamadas').insert([{

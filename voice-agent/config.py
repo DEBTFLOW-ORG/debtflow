@@ -32,7 +32,7 @@ class Config:
     ELEVENLABS_VOICE_ID: str = os.getenv(
         "ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL"
     )
-    ELEVENLABS_MODEL: str = os.getenv("ELEVENLABS_MODEL", "eleven_multilingual_v2")
+    ELEVENLABS_MODEL: str = os.getenv("ELEVENLABS_MODEL", "eleven_flash_v2_5")
 
     # Twilio
     TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID", "")

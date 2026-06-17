@@ -12,6 +12,7 @@ import io
 import logging
 import struct
 import wave
+from xml.sax.saxutils import quoteattr
 
 from config import Config
 
@@ -23,7 +24,9 @@ class TwilioService:
 
     @staticmethod
     def generate_voice_response(
-        public_url: str, welcome_message: str = "Bienvenido"
+        public_url: str,
+        welcome_message: str = "Bienvenido",
+        config_token: str = "",
     ) -> str:
         """
         Genera TwiML para conectar una llamada al WebSocket de Media Streams.
@@ -39,11 +42,16 @@ class TwilioService:
         ws_url = public_url.replace("https://", "wss://").replace("http://", "ws://")
         stream_url = f"{ws_url}/stream"
 
+        config_parameter = (
+            f'\n            <Parameter name="config" value={quoteattr(config_token)} />'
+            if config_token else ""
+        )
+
         twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Connect>
         <Stream url="{stream_url}">
-            <Parameter name="welcome" value="{welcome_message}" />
+            <Parameter name="welcome" value={quoteattr(welcome_message)} />{config_parameter}
         </Stream>
     </Connect>
 </Response>"""
@@ -236,13 +244,15 @@ class AudioBuffer:
 
     def __init__(
         self,
-        silence_threshold: int = 500,
-        silence_duration_ms: int = 1200,
+        silence_threshold: int = 750,
+        silence_duration_ms: int = 600,
+        max_utterance_ms: int = 3500,
         sample_rate: int = 8000,
     ):
         self.buffer = bytearray()
         self.silence_threshold = silence_threshold
         self.silence_duration_ms = silence_duration_ms
+        self.max_utterance_ms = max_utterance_ms
         self.sample_rate = sample_rate
         self.silence_chunks = 0
         self.is_recording = False
@@ -270,7 +280,13 @@ class AudioBuffer:
             self.buffer.extend(pcm_bytes)
 
         # Detectar fin de utterancia: silencio después de hablar
-        if self.is_recording and self.silence_chunks >= self.silence_chunks_needed:
+        max_bytes = int(self.sample_rate * 2 * self.max_utterance_ms / 1000)
+        reached_max_duration = len(self.buffer) >= max_bytes
+
+        if self.is_recording and (
+            self.silence_chunks >= self.silence_chunks_needed
+            or reached_max_duration
+        ):
             return True
 
         return False

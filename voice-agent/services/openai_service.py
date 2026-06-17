@@ -56,7 +56,12 @@ class OpenAIService:
             logger.error(f"Error en transcripción: {e}")
             return ""
 
-    async def get_chat_response(self, user_message: str, conversation_history: list = None) -> str:
+    async def get_chat_response(
+        self,
+        user_message: str,
+        conversation_history: list = None,
+        system_prompt: str = None,
+    ) -> str:
         """
         Obtiene respuesta del LLM para un mensaje de usuario.
 
@@ -67,7 +72,7 @@ class OpenAIService:
         Returns:
             Respuesta del asistente en texto plano
         """
-        messages = [{"role": "system", "content": self.system_prompt}]
+        messages = [{"role": "system", "content": system_prompt or self.system_prompt}]
 
         if conversation_history:
             messages.extend(conversation_history)
@@ -80,8 +85,8 @@ class OpenAIService:
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                temperature=0.7,
-                max_tokens=300,
+                temperature=0.4,
+                max_tokens=100,
             )
 
             content = response.choices[0].message.content.strip()

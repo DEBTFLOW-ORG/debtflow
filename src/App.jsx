@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import LoginPage from "./LoginPage";
-import { deudoresApi, llamadasApi, campanasApi, agenteApi, adminApi } from "./api";
+import { deudoresApi, llamadasApi, agenteApi, adminApi } from "./api";
 
 // ─── DESIGN TOKENS ───────────────────────────────────────────────
 const F = {
@@ -11,19 +11,19 @@ const F = {
 };
 
 const C = {
-  bg:          "#07090F",
-  bgCard:      "#0C1220",
-  bgElevated:  "#101929",
-  bgHover:     "#13203A",
-  border:      "rgba(255,255,255,0.07)",
-  borderHi:    "rgba(255,255,255,0.14)",
+  bg:          "var(--fondo)",
+  bgCard:      "var(--superficie)",
+  bgElevated:  "var(--superficie-elevada)",
+  bgHover:     "var(--superficie-hover)",
+  border:      "var(--borde)",
+  borderHi:    "var(--borde-fuerte)",
   brand:       "#4F8EF7",
   brandDim:    "#2D6FE8",
   brandBg:     "rgba(79,142,247,0.13)",
   brandText:   "#89BBFF",
-  text:        "#EDF1FF",
-  textMid:     "#7A8DB8",
-  textLight:   "#3D4E70",
+  text:        "var(--texto)",
+  textMid:     "var(--texto-secundario)",
+  textLight:   "var(--texto-suave)",
   success:     "#0EC97F",
   successBg:   "rgba(14,201,127,0.13)",
   successText: "#4FFABC",
@@ -42,13 +42,38 @@ const css = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
   @import url('https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap');
 
+  :root {
+    --fondo: #07090F;
+    --superficie: #0C1220;
+    --superficie-elevada: #101929;
+    --superficie-hover: #13203A;
+    --borde: rgba(255,255,255,0.07);
+    --borde-fuerte: rgba(255,255,255,0.14);
+    --texto: #EDF1FF;
+    --texto-secundario: #7A8DB8;
+    --texto-suave: #536589;
+    --barra-lateral: linear-gradient(180deg, #0C1220 0%, #080E1A 100%);
+  }
+  :root[data-theme="light"] {
+    --fondo: #F4F7FC;
+    --superficie: #FFFFFF;
+    --superficie-elevada: #EEF3FA;
+    --superficie-hover: #E7EEF8;
+    --borde: rgba(31,50,81,0.11);
+    --borde-fuerte: rgba(31,50,81,0.2);
+    --texto: #17233A;
+    --texto-secundario: #53627A;
+    --texto-suave: #738198;
+    --barra-lateral: linear-gradient(180deg, #FFFFFF 0%, #F3F7FC 100%);
+  }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body, #root { height: 100%; min-width: 1280px; }
   html { font-size: 14px; }
   body { background: ${C.bg}; color: ${C.text}; font-family: ${F.body}; -webkit-font-smoothing: antialiased; }
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--borde-fuerte); border-radius: 4px; }
 
   .app-root { display: flex; min-height: 100vh; width: 100%; }
 
@@ -345,10 +370,9 @@ function LlamadasConfig({ form, setForm }) {
 
 // ─── SIDEBAR ─────────────────────────────────────────────────────
 const NAV = [
-  { id:"dashboard", label:"Dashboard", icon:"M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" },
+  { id:"dashboard", label:"Resumen", icon:"M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" },
   { id:"deudores",  label:"Deudores",  icon:"M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" },
-  { id:"agente",    label:"Agente IA", icon:"M12 2a10 10 0 100 20 10 10 0 000-20zM12 9a3 3 0 100 6 3 3 0 000-6z" },
-  { id:"campanas",  label:"Campañas",  icon:"M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.1 10.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z" },
+  { id:"agente",    label:"Asistente de voz", icon:"M12 2a10 10 0 100 20 10 10 0 000-20zM12 9a3 3 0 100 6 3 3 0 000-6z" },
   { id:"historial", label:"Historial", icon:"M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8" },
 ];
 
@@ -382,8 +406,8 @@ function Sidebar({ active, setActive }) {
             </svg>
           </div>
           <div>
-            <div style={{ fontFamily:F.display, fontWeight:700, fontSize:16, color:"#fff", letterSpacing:"-0.02em" }}>Debtflow</div>
-            <div style={{ fontSize:10, color:C.textLight, marginTop:1, letterSpacing:"0.05em" }}>AI COLLECTIONS</div>
+            <div style={{ fontFamily:F.display, fontWeight:700, fontSize:16, color:C.text, letterSpacing:"-0.02em" }}>Debtflow</div>
+            <div style={{ fontSize:10, color:C.textLight, marginTop:1, letterSpacing:"0.05em" }}>GESTIÓN DE COBRANZAS</div>
           </div>
         </div>
       </div>
@@ -411,7 +435,7 @@ function Sidebar({ active, setActive }) {
               background: on ? "rgba(79,142,247,0.12)" : "transparent",
               border: on ? "1px solid rgba(79,142,247,0.2)" : "1px solid transparent",
               borderRadius:9, cursor:"pointer", marginBottom:2,
-              color: on ? "#fff" : C.textMid,
+              color: on ? C.text : C.textMid,
               fontSize:13.5, fontFamily:F.body, fontWeight: on ? 600 : 400,
               transition:"all 0.13s", textAlign:"left", position:"relative",
             }}>
@@ -429,7 +453,7 @@ function Sidebar({ active, setActive }) {
       <div style={{ padding:"14px 16px", borderTop:`1px solid ${C.border}` }}>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
           <div className="pulse" style={{ width:7, height:7, borderRadius:"50%", background:C.danger }} />
-          <span style={{ fontSize:11, color:C.textLight }}>Twilio sin conectar</span>
+          <span style={{ fontSize:11, color:C.textLight }}>Servicio telefónico sin conectar</span>
         </div>
       </div>
     </aside>
@@ -437,7 +461,7 @@ function Sidebar({ active, setActive }) {
 }
 
 // ─── TOPBAR ──────────────────────────────────────────────────────
-function Topbar({ title }) {
+function Topbar({ title, theme, onToggleTheme }) {
   return (
     <div style={{
       display:"flex", alignItems:"center", justifyContent:"space-between",
@@ -446,19 +470,27 @@ function Topbar({ title }) {
       <div>
         <h1 style={{
           fontFamily:F.display, fontSize:24, fontWeight:700, letterSpacing:"-0.03em",
-          background:"linear-gradient(135deg, #EDF1FF 0%, #89BBFF 100%)",
-          WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
+          color:C.text,
         }}>{title}</h1>
         <div style={{ fontSize:12, color:C.textLight, marginTop:4, fontFamily:F.mono }}>
           {new Date().toLocaleDateString("es-AR",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}
         </div>
       </div>
-      <div style={{
-        padding:"7px 14px", borderRadius:20,
-        background:C.bgElevated, border:`1px solid ${C.border}`,
-        fontSize:12, color:C.textMid, fontFamily:F.mono,
-      }}>
-        {new Date().toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"})}
+      <div style={{display:"flex",alignItems:"center",gap:8}}>
+        <button
+          className="btn btn-outline btn-sm"
+          onClick={onToggleTheme}
+          aria-label={theme === "dark" ? "Activar modo claro" : "Activar modo oscuro"}
+        >
+          {theme === "dark" ? "Modo claro" : "Modo oscuro"}
+        </button>
+        <div style={{
+          padding:"7px 14px", borderRadius:20,
+          background:C.bgElevated, border:`1px solid ${C.border}`,
+          fontSize:12, color:C.textMid, fontFamily:F.mono,
+        }}>
+          {new Date().toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"})}
+        </div>
       </div>
     </div>
   );
@@ -562,25 +594,33 @@ function Deudores({ deudores, setDeudores }) {
   const [editando, setEditando] = useState(null); // id del deudor que se está editando
   const [form,     setForm]     = useState(FORM_EMPTY);
   const [search,   setSearch]   = useState("");
+  const [llamadaActiva, setLlamadaActiva] = useState(null);
+  const [mensajeLlamada, setMensajeLlamada] = useState(null);
 
-const llamarDeudor = async (deudor) => {
-    // Busca si ya habías ingresado una URL de ngrok antes
-    let urlGuardada = localStorage.getItem("ngrok_url") || "";
-    const urlNgrok = prompt(`Vas a llamar a ${deudor.nombre}. Ingresá/Confirmá tu URL de Ngrok:`, urlGuardada);
-    
-    if(!urlNgrok) return;
-    
-    // Guarda la URL para la próxima llamada
-    localStorage.setItem("ngrok_url", urlNgrok);
+  const llamarDeudor = async (deudor) => {
+    setLlamadaActiva(deudor.id);
+    setMensajeLlamada({
+      tipo: "info",
+      texto: `Iniciando llamada a ${deudor.nombre} (${deudor.tel})...`,
+    });
 
     try {
-      await llamadasApi.test({ 
-        telefono_destino: deudor.tel, 
-        url_python_agent: urlNgrok 
+      await llamadasApi.test({
+        telefono_destino: deudor.tel,
+        deudor_id: deudor.id,
       });
-      alert(`¡Llamada en curso a ${deudor.tel}! Mirá la consola de Python.`);
-    } catch (err) { 
-      alert("Error: " + err); 
+      setMensajeLlamada({
+        tipo: "success",
+        texto: `Llamada en curso a ${deudor.nombre} (${deudor.tel}).`,
+      });
+    } catch (err) {
+      const detalle = err?.response?.data?.error || err?.message || String(err);
+      setMensajeLlamada({
+        tipo: "error",
+        texto: `No se pudo iniciar la llamada: ${detalle}`,
+      });
+    } finally {
+      setLlamadaActiva(null);
     }
   };
 
@@ -650,6 +690,60 @@ const save = async () => {
         <button className="btn btn-primary" onClick={openNuevo}>+ Nuevo deudor</button>
       </div>
 
+      {mensajeLlamada && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            display:"flex",
+            alignItems:"center",
+            justifyContent:"space-between",
+            gap:14,
+            padding:"12px 14px",
+            marginBottom:14,
+            borderRadius:10,
+            border:`1px solid ${
+              mensajeLlamada.tipo === "success"
+                ? "rgba(14,201,127,0.3)"
+                : mensajeLlamada.tipo === "error"
+                  ? "rgba(255,91,110,0.3)"
+                  : "rgba(79,142,247,0.3)"
+            }`,
+            background:
+              mensajeLlamada.tipo === "success"
+                ? C.successBg
+                : mensajeLlamada.tipo === "error"
+                  ? C.dangerBg
+                  : C.brandBg,
+            color:
+              mensajeLlamada.tipo === "success"
+                ? C.successText
+                : mensajeLlamada.tipo === "error"
+                  ? C.dangerText
+                  : C.brandText,
+            fontSize:13,
+            fontWeight:500,
+          }}
+        >
+          <span>{mensajeLlamada.texto}</span>
+          <button
+            onClick={() => setMensajeLlamada(null)}
+            aria-label="Cerrar mensaje"
+            style={{
+              border:"none",
+              background:"transparent",
+              color:"inherit",
+              cursor:"pointer",
+              fontSize:18,
+              lineHeight:1,
+              padding:"0 2px",
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <div className="card" style={{ overflow:"hidden" }}>
         <table>
           <thead><tr>
@@ -679,7 +773,13 @@ const save = async () => {
                 </td>
                 <td>
                   <div style={{display:"flex",gap:6}}>
-                    <button className="btn btn-success btn-sm" onClick={() => llamarDeudor(d)} title="Llamar ahora">
+                    <button
+                      className="btn btn-success btn-sm"
+                      onClick={() => llamarDeudor(d)}
+                      title={llamadaActiva === d.id ? "Iniciando llamada" : "Llamar ahora"}
+                      disabled={llamadaActiva !== null}
+                      style={{opacity:llamadaActiva !== null ? 0.6 : 1}}
+                    >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.1 10.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/>
                       </svg>
@@ -736,9 +836,9 @@ const save = async () => {
 // ─── AGENTE ──────────────────────────────────────────────────────
 function Agente() {
   const [cfg, setCfg] = useState({
-    nombre: "Valentina", tono: "profesional", voz: "nova", idioma: "es-AR", modelo: "gpt-4o", apiKey: "",
+    nombre: "Valentina", voice_id: "EXAVITQu4vr4xnSDxMaL", tono: "profesional", idioma: "es-AR",
     personalidad: "Soy un agente de cobranzas profesional y empático. Mi objetivo es llegar a un acuerdo de pago.",
-    saludo: "Buenos días, ¿hablo con {nombre_deudor}? Le llamo de parte de {acreedor}.",
+    saludo: "Buenos días, ¿hablo con {nombre_deudor}? Soy {nombre}, asistente de cobranzas de {acreedor}.",
     objecion: "Entiendo su situación. ¿Podríamos acordar un plan de pagos?",
     cierre: "Gracias, quedamos en que realizará el pago el {fecha}. ¡Buen día!",
   });
@@ -772,7 +872,7 @@ function Agente() {
     }
   };
 
-  if (loadingConfig) return <div style={{ color: C.textMid, padding: 20 }}>Cargando cerebro de la IA...</div>;
+  if (loadingConfig) return <div style={{ color: C.textMid, padding: 20 }}>Cargando configuración...</div>;
 
   return (
     <div className="fade-up" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
@@ -780,21 +880,19 @@ function Agente() {
         <div className="card-glow">
           <div className="section-hd">Identidad del agente</div>
           <Field label="Nombre del agente"><input value={cfg.nombre} onChange={s("nombre")} /></Field>
+          <Field label="Voz">
+            <select value={cfg.voice_id} onChange={s("voice_id")}>
+              <option value="EXAVITQu4vr4xnSDxMaL">Sarah — femenina, profesional</option>
+              <option value="cjVigY5qzO86Huf0OWal">Eric — masculina, confiable</option>
+              <option value="SAz9YHcvj6GT2YYXdXww">River — neutral, tranquila</option>
+            </select>
+          </Field>
           <Field label="Tono">
             <select value={cfg.tono} onChange={s("tono")}>
               <option value="profesional">Profesional y formal</option>
               <option value="amigable">Amigable y empático</option>
               <option value="firme">Firme y directo</option>
               <option value="urgente">Urgente y persuasivo</option>
-            </select>
-          </Field>
-          <Field label="Voz">
-            <select value={cfg.voz} onChange={s("voz")}>
-              <option value="nova">Nova — femenina, cálida</option>
-              <option value="alloy">Alloy — neutra, clara</option>
-              <option value="echo">Echo — masculina, formal</option>
-              <option value="shimmer">Shimmer — femenina, energética</option>
-              <option value="onyx">Onyx — masculina, grave</option>
             </select>
           </Field>
           <Field label="Idioma">
@@ -806,20 +904,17 @@ function Agente() {
           </Field>
         </div>
         <div className="card-padded">
-          <div className="section-hd">Conexión Twilio + OpenAI</div>
-          <Field label="API Key Twilio"><input type="password" placeholder="ACxxxxxxxx" value={cfg.apiKey} onChange={s("apiKey")} /></Field>
-          <Field label="Modelo LLM">
-            <select value={cfg.modelo} onChange={s("modelo")}>
-              <option value="gpt-4o">GPT-4o (recomendado)</option>
-              <option value="gpt-4o-mini">GPT-4o Mini (económico)</option>
-            </select>
-          </Field>
+          <div className="section-hd">Cómo se comporta</div>
+          <p style={{fontSize:13,color:C.textMid,lineHeight:1.7}}>
+            Esta configuración se aplica a las próximas llamadas. Las conexiones
+            y credenciales son administradas de forma interna.
+          </p>
         </div>
       </div>
       <div className="card-padded">
-        <div className="section-hd">Scripts de conversación</div>
+        <div className="section-hd">Guiones de conversación</div>
         <div style={{background:C.bgElevated,borderRadius:8,padding:"10px 14px",marginBottom:14,fontSize:12,color:C.textMid,border:`1px solid ${C.border}`}}>
-          Variables: {["{nombre_deudor}","{acreedor}","{monto}","{fecha}"].map(v=>(
+          Variables: {["{nombre}","{nombre_deudor}","{acreedor}","{monto}","{fecha}"].map(v=>(
             <span key={v} style={{background:C.brandBg,color:C.brandText,padding:"1px 7px",borderRadius:4,marginRight:4,fontFamily:F.mono,fontSize:11}}>{v}</span>
           ))}
         </div>
@@ -942,10 +1037,16 @@ function Campanas({ deudores }) {
 function Historial({ llamadas }) {
   const [filtro,     setFiltro]     = useState("todos");
   const [detalle,    setDetalle]    = useState(null);
-  const [tabDetalle, setTabDetalle] = useState("transcript");
+
+  useEffect(() => {
+    if (!detalle) return;
+    const updated = llamadas.find(l => l.id === detalle.id);
+    if (updated) setDetalle(updated);
+  }, [llamadas, detalle?.id]);
 
   const filtros = [{k:"todos",l:"Todos"},...Object.entries(resultMap).map(([k,v])=>({k,l:v.label}))];
   const filtered = filtro==="todos" ? llamadas : llamadas.filter(l=>l.resultado===filtro);
+  const fechaPrometida = detalle?.nota?.match(/Fecha prometida:\s*([0-9/]+)/i)?.[1];
 
   return (
     <div className="fade-up">
@@ -966,7 +1067,7 @@ function Historial({ llamadas }) {
         <table>
           <thead><tr>
             <th>Deudor</th><th>Teléfono</th><th>Fecha</th><th>Duración</th>
-            <th>Resultado</th><th>Sentimiento IA</th><th>Notas</th><th style={{width:110}}></th>
+            <th>Resultado</th><th>Tono detectado</th><th>Notas</th><th style={{width:110}}></th>
           </tr></thead>
           <tbody>
             {filtered.map(l=>(
@@ -979,8 +1080,8 @@ function Historial({ llamadas }) {
                 <td><Badge cls={(sentimientoMap[l.sentimiento]||sentimientoMap.neutro).cls} label={(sentimientoMap[l.sentimiento]||sentimientoMap.neutro).label}/></td>
                 <td style={{fontSize:12.5,color:C.textMid,maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.nota}</td>
                 <td>
-                  <button className="btn btn-outline btn-sm" onClick={()=>{setDetalle(l);setTabDetalle("transcript");}}>
-                    Ver transcript
+                  <button className="btn btn-outline btn-sm" onClick={()=>setDetalle(l)}>
+                    Ver resumen
                   </button>
                 </td>
               </tr>
@@ -997,39 +1098,17 @@ function Historial({ llamadas }) {
             <span style={{fontSize:12,color:C.textMid,fontFamily:F.mono,alignSelf:"center"}}>{detalle.fecha} · {detalle.dur}</span>
           </div>
 
-          <div style={{display:"flex",gap:4,marginBottom:18,borderBottom:`1px solid ${C.border}`}}>
-            {[["transcript","Transcripción"],["resumen","Resumen IA"]].map(([k,l])=>(
-              <button key={k} onClick={()=>setTabDetalle(k)} style={{
-                padding:"8px 16px",borderRadius:"8px 8px 0 0",cursor:"pointer",
-                fontSize:13,fontWeight:tabDetalle===k?600:400,border:"none",
-                background: tabDetalle===k ? C.brandBg : "transparent",
-                color: tabDetalle===k ? C.brandText : C.textMid,
-                borderBottom: tabDetalle===k ? `2px solid ${C.brand}` : "2px solid transparent",
-                transition:"all 0.12s",
-              }}>{l}</button>
-            ))}
+          <div style={{fontSize:11,color:C.textLight,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14}}>
+            Resumen automático
           </div>
 
-          {tabDetalle==="transcript" && (
-            <div className="transcript-container" style={{maxHeight:340,overflowY:"auto",paddingRight:4}}>
-              {detalle.transcripcion.map((t,i)=>(
-                <div key={i} style={{display:"flex",flexDirection:"column"}}>
-                  <div style={{fontSize:10,color:C.textLight,marginBottom:3,textTransform:"uppercase",letterSpacing:"0.06em",textAlign:t.quien==="deudor"?"right":"left",display:"flex",alignItems:"center",gap:4,justifyContent:t.quien==="deudor"?"flex-end":"flex-start"}}>
-                    {t.quien==="agente"
-                      ? <><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="8" r="5"/><path d="M3 21a9 9 0 0118 0"/></svg>Agente IA</>
-                      : <><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0113 0"/></svg>Deudor</>
-                    }
-                  </div>
-                  <div className={`transcript-bubble ${t.quien==="agente"?"bubble-agent":"bubble-deudor"}`}>
-                    {t.texto}
-                  </div>
+          <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              {fechaPrometida && (
+                <div style={{background:C.warningBg,borderRadius:10,padding:"14px 16px",border:"1px solid rgba(255,184,77,0.28)"}}>
+                  <div style={{fontSize:10,color:C.warningText,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>Fecha prometida de pago</div>
+                  <div style={{fontFamily:F.mono,fontSize:18,fontWeight:700,color:C.warningText}}>{fechaPrometida}</div>
                 </div>
-              ))}
-            </div>
-          )}
-
-          {tabDetalle==="resumen" && (
-            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              )}
               <div style={{background:C.bgElevated,borderRadius:10,padding:"14px 16px",border:`1px solid ${C.border}`}}>
                 <div style={{fontSize:10,color:C.textLight,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>Resultado</div>
                 <Badge cls={(resultMap[detalle.resultado]||resultMap.no_contesta).cls} label={(resultMap[detalle.resultado]||resultMap.no_contesta).label}/>
@@ -1042,8 +1121,7 @@ function Historial({ llamadas }) {
                 <div style={{fontSize:10,color:C.textLight,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>Notas del agente</div>
                 <p style={{fontSize:13.5,color:C.text,lineHeight:1.7}}>{detalle.nota}</p>
               </div>
-            </div>
-          )}
+          </div>
         </Modal>
       )}
     </div>
@@ -1109,7 +1187,7 @@ function AdminPanel() {
       {tab==="usuarios" && (
         <div className="card" style={{overflow:"hidden"}}>
           <table>
-            <thead><tr><th>Email</th><th>Plan</th><th>Rol</th><th>Número Twilio</th><th>Registrado</th></tr></thead>
+            <thead><tr><th>Correo electrónico</th><th>Plan</th><th>Rol</th><th>Número telefónico</th><th>Registrado</th></tr></thead>
             <tbody>
               {users.map(u=>(
                 <tr key={u.id}>
@@ -1121,8 +1199,8 @@ function AdminPanel() {
                   </td>
                   <td>
                     <select value={u.role} onChange={e=>cambiarRol(u.id,e.target.value)} style={{width:"auto",padding:"5px 8px",fontSize:12}}>
-                      <option value="user">user</option>
-                      <option value="admin">admin</option>
+                      <option value="user">Usuario</option>
+                      <option value="admin">Administrador</option>
                     </select>
                   </td>
                   <td style={{fontFamily:F.mono,fontSize:12,color:u.twilio_phone_number?C.successText:C.textLight}}>
@@ -1172,6 +1250,14 @@ export default function App() {
   const [active,   setActive]   = useState("dashboard");
   const [deudores, setDeudores] = useState([]);
   const [llamadas, setLlamadas] = useState([]);
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("df_theme") || "dark"
+  );
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("df_theme", theme);
+  }, [theme]);
 
   // Cargar datos desde la API
   useEffect(() => {
@@ -1179,6 +1265,24 @@ export default function App() {
     deudoresApi.list().then(setDeudores).catch(()=>{});
     llamadasApi.list().then(setLlamadas).catch(()=>{});
   }, [user]);
+
+  useEffect(() => {
+    if (!user || active !== "historial") return;
+
+    const refresh = () => llamadasApi.list().then(setLlamadas).catch(()=>{});
+    refresh();
+    const interval = setInterval(refresh, 3000);
+    return () => clearInterval(interval);
+  }, [user, active]);
+
+  useEffect(() => {
+    if (!user || !["dashboard", "deudores"].includes(active)) return;
+
+    const refresh = () => deudoresApi.list().then(setDeudores).catch(()=>{});
+    refresh();
+    const interval = setInterval(refresh, 5000);
+    return () => clearInterval(interval);
+  }, [user, active]);
 
   // Pantalla de carga
   if (loading) {
@@ -1201,19 +1305,18 @@ export default function App() {
 
   const isAdmin = user.role === "admin";
   const titles = {
-    dashboard:"Dashboard", deudores:"Deudores",
-    agente:"Agente IA", campanas:"Campañas", historial:"Historial de llamadas",
-    admin:"Panel de Admin",
+    dashboard:"Resumen", deudores:"Deudores",
+    agente:"Asistente de voz", historial:"Historial de llamadas",
+    admin:"Administración",
   };
 
   // Nav items: admin ve opción extra
   const NAV_ITEMS = [
-    { id:"dashboard", label:"Dashboard", icon:"M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" },
+    { id:"dashboard", label:"Resumen", icon:"M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z" },
     { id:"deudores",  label:"Deudores",  icon:"M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" },
-    { id:"agente",    label:"Agente IA", icon:"M12 2a10 10 0 100 20 10 10 0 000-20zM12 9a3 3 0 100 6 3 3 0 000-6z" },
-    { id:"campanas",  label:"Campañas",  icon:"M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.1 10.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z" },
+    { id:"agente",    label:"Asistente de voz", icon:"M12 2a10 10 0 100 20 10 10 0 000-20zM12 9a3 3 0 100 6 3 3 0 000-6z" },
     { id:"historial", label:"Historial", icon:"M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8" },
-    ...(isAdmin ? [{ id:"admin", label:"Admin", icon:"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" }] : []),
+    ...(isAdmin ? [{ id:"admin", label:"Administración", icon:"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" }] : []),
   ];
 
   return (
@@ -1222,7 +1325,7 @@ export default function App() {
       <div className="app-root">
         {/* Sidebar con nav dinámico + logout */}
         <aside style={{
-          width:230, background:"linear-gradient(180deg, #0C1220 0%, #080E1A 100%)",
+          width:230, background:"var(--barra-lateral)",
           display:"flex", flexDirection:"column", flexShrink:0,
           borderRight:`1px solid ${C.border}`, position:"sticky", top:0, height:"100vh",
         }}>
@@ -1232,8 +1335,8 @@ export default function App() {
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
               </div>
               <div>
-                <div style={{ fontFamily:F.display,fontWeight:700,fontSize:16,color:"#fff",letterSpacing:"-0.02em" }}>Debtflow</div>
-                <div style={{ fontSize:10,color:C.textLight,marginTop:1,letterSpacing:"0.05em" }}>AI COLLECTIONS</div>
+                <div style={{ fontFamily:F.display,fontWeight:700,fontSize:16,color:C.text,letterSpacing:"-0.02em" }}>Debtflow</div>
+                <div style={{ fontSize:10,color:C.textLight,marginTop:1,letterSpacing:"0.05em" }}>GESTIÓN DE COBRANZAS</div>
               </div>
             </div>
           </div>
@@ -1246,7 +1349,7 @@ export default function App() {
                   <defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#4F8EF7"/><stop offset="100%" stopColor="#9B6EFF"/></linearGradient></defs>
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                 </svg>
-                {isAdmin ? "Admin" : (user.plan||"trial")}
+                {isAdmin ? "Administración" : "Cuenta activa"}
               </span>
             </div>
           </div>
@@ -1262,7 +1365,7 @@ export default function App() {
                   background:on?"rgba(79,142,247,0.12)":"transparent",
                   border:on?"1px solid rgba(79,142,247,0.2)":"1px solid transparent",
                   borderRadius:9,cursor:"pointer",marginBottom:2,
-                  color:on?"#fff":C.textMid,
+                  color:on?C.text:C.textMid,
                   fontSize:13.5,fontFamily:F.body,fontWeight:on?600:400,
                   transition:"all 0.13s",textAlign:"left",position:"relative",
                 }}>
@@ -1292,11 +1395,14 @@ export default function App() {
         </aside>
 
         <main style={{ flex:1, padding:"28px 36px", overflowY:"auto", minWidth:0 }}>
-          <Topbar title={titles[active]} />
+          <Topbar
+            title={titles[active]}
+            theme={theme}
+            onToggleTheme={() => setTheme(t => t === "dark" ? "light" : "dark")}
+          />
           {active==="dashboard" && <Dashboard deudores={deudores} llamadas={llamadas}/>}
           {active==="deudores"  && <Deudores  deudores={deudores} setDeudores={setDeudores}/>}
           {active==="agente"    && <Agente/>}
-          {active==="campanas"  && <Campanas  deudores={deudores}/>}
           {active==="historial" && <Historial llamadas={llamadas}/>}
           {active==="admin" && isAdmin && <AdminPanel />}
         </main>
