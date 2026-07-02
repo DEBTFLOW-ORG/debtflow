@@ -174,7 +174,7 @@ const FRECUENCIAS = [
   { value:"mensual",   label:"Mensual" },
 ];
 
-const initDeudores = [
+const _initDeudores = [
   { id:1, nombre:"Carlos Méndez",   tel:"+54 9 11 4523-7890",  monto:45000, acreedor:"Banco Patagonia", estado:"pendiente",    intentos:0, llamarAuto:true,  frecuencia:"semanal",  hora:"10:00", diasSemana:["lun","jue"] },
   { id:2, nombre:"Ana Rodríguez",   tel:"+54 9 351 6234-1234", monto:12300, acreedor:"FinanCo S.A.",    estado:"contactado",   intentos:2, llamarAuto:true,  frecuencia:"cada2dias",hora:"09:30", diasSemana:["lun","mar","mié","jue","vie"] },
   { id:3, nombre:"Martín López",    tel:"+54 9 261 7890-5678", monto:89750, acreedor:"Banco Patagonia", estado:"promesa_pago", intentos:1, llamarAuto:false, frecuencia:"",         hora:"10:00", diasSemana:[] },
@@ -182,7 +182,7 @@ const initDeudores = [
   { id:5, nombre:"Roberto Silva",   tel:"+54 9 341 4567-8901", monto:67400, acreedor:"FinanCo S.A.",    estado:"cancelado",    intentos:3, llamarAuto:false, frecuencia:"",         hora:"10:00", diasSemana:[] },
 ];
 
-const initLlamadas = [
+const _initLlamadas = [
   { id:1, deudor:"Ana Rodríguez",  tel:"+54 9 351 6234-1234", fecha:"15/03 10:32", dur:"3m 24s", resultado:"contactado",   nota:"Prometió pagar el viernes", sentimiento:"positivo",
     transcripcion:[
       { quien:"agente", texto:"Buenos días, ¿hablo con Ana Rodríguez? Le llamo de parte de FinanCo S.A." },
@@ -598,6 +598,12 @@ function Deudores({ deudores, setDeudores }) {
   const [mensajeLlamada, setMensajeLlamada] = useState(null);
 
   const llamarDeudor = async (deudor) => {
+    const confirmar = window.confirm(
+      `¿Iniciar llamada a ${deudor.nombre} (${deudor.tel})?`
+    );
+
+    if (!confirmar) return;
+
     setLlamadaActiva(deudor.id);
     setMensajeLlamada({
       tipo: "info",
@@ -780,9 +786,7 @@ const save = async () => {
                       disabled={llamadaActiva !== null}
                       style={{opacity:llamadaActiva !== null ? 0.6 : 1}}
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.1 10.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/>
-                      </svg>
+                      {llamadaActiva === d.id ? "Llamando..." : "Llamar"}
                     </button>
                     <button className="btn btn-outline btn-sm" onClick={()=>openEditar(d)}>Editar</button>
                     <button className="btn btn-danger btn-sm" onClick={() => eliminarDeudor(d.id, d.nombre)} aria-label={`Eliminar ${d.nombre}`}>
@@ -836,11 +840,11 @@ const save = async () => {
 // ─── AGENTE ──────────────────────────────────────────────────────
 function Agente() {
   const [cfg, setCfg] = useState({
-    nombre: "Valentina", voice_id: "EXAVITQu4vr4xnSDxMaL", tono: "profesional", idioma: "es-AR",
-    personalidad: "Soy un agente de cobranzas profesional y empático. Mi objetivo es llegar a un acuerdo de pago.",
-    saludo: "Buenos días, ¿hablo con {nombre_deudor}? Soy {nombre}, asistente de cobranzas de {acreedor}.",
-    objecion: "Entiendo su situación. ¿Podríamos acordar un plan de pagos?",
-    cierre: "Gracias, quedamos en que realizará el pago el {fecha}. ¡Buen día!",
+    nombre: "Valentina", voice_id: "EXAVITQu4vr4xnSDxMaL", tono: "cercano, calmo y profesional", idioma: "espanol de Argentina",
+    personalidad: "Sos Valentina, una agente argentina de cobranzas. Hablas natural, corto y con tono humano por telefono.",
+    saludo: "Hola {nombre_deudor}, soy {nombre}, de Debtflow. Te llamo por {acreedor}, por un saldo pendiente de {monto} pesos. Me escuchas bien?",
+    objecion: "Escucha, valida en una frase y propone una fecha o monto posible.",
+    cierre: "Confirma fecha y monto acordado en una frase simple.",
   });
   
   const [saved, setSaved] = useState(false);
@@ -1038,15 +1042,10 @@ function Historial({ llamadas }) {
   const [filtro,     setFiltro]     = useState("todos");
   const [detalle,    setDetalle]    = useState(null);
 
-  useEffect(() => {
-    if (!detalle) return;
-    const updated = llamadas.find(l => l.id === detalle.id);
-    if (updated) setDetalle(updated);
-  }, [llamadas, detalle?.id]);
-
   const filtros = [{k:"todos",l:"Todos"},...Object.entries(resultMap).map(([k,v])=>({k,l:v.label}))];
   const filtered = filtro==="todos" ? llamadas : llamadas.filter(l=>l.resultado===filtro);
-  const fechaPrometida = detalle?.nota?.match(/Fecha prometida:\s*([0-9/]+)/i)?.[1];
+  const detalleActual = detalle ? (llamadas.find(l => l.id === detalle.id) || detalle) : null;
+  const fechaPrometida = detalleActual?.nota?.match(/Fecha prometida:\s*([0-9/]+)/i)?.[1];
 
   return (
     <div className="fade-up">
@@ -1090,12 +1089,12 @@ function Historial({ llamadas }) {
         </table>
       </div>
 
-      {detalle && (
-        <Modal title={`Llamada — ${detalle.deudor}`} onClose={()=>setDetalle(null)} width={560}>
+      {detalleActual && (
+        <Modal title={`Llamada — ${detalleActual.deudor}`} onClose={()=>setDetalle(null)} width={560}>
           <div style={{display:"flex",gap:10,marginBottom:18,flexWrap:"wrap"}}>
-            <Badge cls={(resultMap[detalle.resultado]||resultMap.no_contesta).cls} label={(resultMap[detalle.resultado]||resultMap.no_contesta).label}/>
-            <Badge cls={(sentimientoMap[detalle.sentimiento]||sentimientoMap.neutro).cls} label={`Sentimiento: ${(sentimientoMap[detalle.sentimiento]||sentimientoMap.neutro).label}`}/>
-            <span style={{fontSize:12,color:C.textMid,fontFamily:F.mono,alignSelf:"center"}}>{detalle.fecha} · {detalle.dur}</span>
+            <Badge cls={(resultMap[detalleActual.resultado]||resultMap.no_contesta).cls} label={(resultMap[detalleActual.resultado]||resultMap.no_contesta).label}/>
+            <Badge cls={(sentimientoMap[detalleActual.sentimiento]||sentimientoMap.neutro).cls} label={`Sentimiento: ${(sentimientoMap[detalleActual.sentimiento]||sentimientoMap.neutro).label}`}/>
+            <span style={{fontSize:12,color:C.textMid,fontFamily:F.mono,alignSelf:"center"}}>{detalleActual.fecha} · {detalleActual.dur}</span>
           </div>
 
           <div style={{fontSize:11,color:C.textLight,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14}}>
@@ -1111,15 +1110,15 @@ function Historial({ llamadas }) {
               )}
               <div style={{background:C.bgElevated,borderRadius:10,padding:"14px 16px",border:`1px solid ${C.border}`}}>
                 <div style={{fontSize:10,color:C.textLight,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>Resultado</div>
-                <Badge cls={(resultMap[detalle.resultado]||resultMap.no_contesta).cls} label={(resultMap[detalle.resultado]||resultMap.no_contesta).label}/>
+                <Badge cls={(resultMap[detalleActual.resultado]||resultMap.no_contesta).cls} label={(resultMap[detalleActual.resultado]||resultMap.no_contesta).label}/>
               </div>
               <div style={{background:C.bgElevated,borderRadius:10,padding:"14px 16px",border:`1px solid ${C.border}`}}>
                 <div style={{fontSize:10,color:C.textLight,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>Sentimiento detectado por IA</div>
-                <Badge cls={(sentimientoMap[detalle.sentimiento]||sentimientoMap.neutro).cls} label={(sentimientoMap[detalle.sentimiento]||sentimientoMap.neutro).label}/>
+                <Badge cls={(sentimientoMap[detalleActual.sentimiento]||sentimientoMap.neutro).cls} label={(sentimientoMap[detalleActual.sentimiento]||sentimientoMap.neutro).label}/>
               </div>
               <div style={{background:C.bgElevated,borderRadius:10,padding:"14px 16px",border:`1px solid ${C.border}`}}>
                 <div style={{fontSize:10,color:C.textLight,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:8}}>Notas del agente</div>
-                <p style={{fontSize:13.5,color:C.text,lineHeight:1.7}}>{detalle.nota}</p>
+                <p style={{fontSize:13.5,color:C.text,lineHeight:1.7}}>{detalleActual.nota}</p>
               </div>
           </div>
         </Modal>
@@ -1203,8 +1202,8 @@ function AdminPanel() {
                       <option value="admin">Administrador</option>
                     </select>
                   </td>
-                  <td style={{fontFamily:F.mono,fontSize:12,color:u.twilio_phone_number?C.successText:C.textLight}}>
-                    {u.twilio_phone_number||"Provisionando..."}
+                  <td style={{fontFamily:F.mono,fontSize:12,color:C.successText}}>
+                    {u.twilio_phone_number || "Vapi/Telnyx activo"}
                   </td>
                   <td style={{fontSize:12,color:C.textLight,fontFamily:F.mono}}>
                     {u.created_at ? new Date(u.created_at).toLocaleDateString('es-AR') : '—'}
@@ -1382,9 +1381,9 @@ export default function App() {
           <div style={{ padding:"14px 16px", borderTop:`1px solid ${C.border}` }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <div className="pulse" style={{ width:7, height:7, borderRadius:"50%", background:user.twilio_phone_number ? C.success : C.danger }} />
+                <div className="pulse" style={{ width:7, height:7, borderRadius:"50%", background:C.success }} />
                 <span style={{ fontSize:11, color:C.textLight }}>
-                  {user.twilio_phone_number ? user.twilio_phone_number : "Provisionando..."}
+                  Vapi/Telnyx activo
                 </span>
               </div>
               <button onClick={logout} aria-label="Cerrar sesión" title="Cerrar sesión" style={{ background:"none", border:"none", color:C.textLight, cursor:"pointer", padding:"4px", borderRadius:6, display:"flex", alignItems:"center", transition:"color 0.15s" }} onMouseEnter={e=>e.currentTarget.style.color=C.danger} onMouseLeave={e=>e.currentTarget.style.color=C.textLight}>
@@ -1410,3 +1409,4 @@ export default function App() {
     </>
   );
 }
+

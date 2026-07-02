@@ -6,7 +6,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 async function testConnection() {
   try {
     // Intentamos hacer una consulta simple a una tabla que sepas que existe
-    const { data, error } = await supabase.from('users').select('count', { count: 'exact', head: true });
+    const { error } = await supabase.from('users').select('count', { count: 'exact', head: true });
     
     if (error) {
       console.error("❌ Error de conexión:", error.message);

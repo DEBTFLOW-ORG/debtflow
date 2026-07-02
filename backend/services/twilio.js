@@ -65,9 +65,10 @@ async function buyPhoneNumber(subSid, encryptedToken) {
 // Añadir esta función en backend/services/twilio.js
 async function iniciarLlamada(subSid, encryptedToken, fromNumber, toNumber, twimlUrl) {
   // 1. Leemos las variables del .env y usamos .trim() para limpiar espacios invisibles o saltos de línea (típico en Windows)
-  const sid = process.env.TWILIO_MASTER_ACCOUNT_SID?.trim();
-  const token = process.env.TWILIO_MASTER_AUTH_TOKEN?.trim();
-  const phone = process.env.TWILIO_PHONE_NUMBER?.trim();
+  const sid = process.env.TWILIO_MASTER_ACCOUNT_SID?.trim() || String(subSid || '').trim();
+  const token = process.env.TWILIO_MASTER_AUTH_TOKEN?.trim()
+    || (encryptedToken ? decrypt(encryptedToken) : '');
+  const phone = String(fromNumber || process.env.TWILIO_PHONE_NUMBER || '').trim();
 
   if (!sid || !token || !phone) {
     throw new Error('Falta configurar la cuenta maestra de Twilio');
@@ -87,5 +88,20 @@ async function iniciarLlamada(subSid, encryptedToken, fromNumber, toNumber, twim
   return call;
 }
 
+async function getAccountInfo() {
+  const sid = process.env.TWILIO_MASTER_ACCOUNT_SID?.trim();
+  const token = process.env.TWILIO_MASTER_AUTH_TOKEN?.trim();
+  if (!sid || !token) throw new Error('Falta configurar la cuenta maestra de Twilio');
+
+  const client = twilio(sid, token);
+  const account = await client.api.accounts(sid).fetch();
+  const callerIds = await client.outgoingCallerIds.list({ limit: 100 });
+  return {
+    type: account.type,
+    status: account.status,
+    verifiedNumbers: callerIds.map(id => id.phoneNumber),
+  };
+}
+
 // Actualizar el module.exports al final del archivo
-module.exports = { createSubAccount, buyPhoneNumber, encrypt, decrypt, iniciarLlamada };
+module.exports = { createSubAccount, buyPhoneNumber, encrypt, decrypt, iniciarLlamada, getAccountInfo };
