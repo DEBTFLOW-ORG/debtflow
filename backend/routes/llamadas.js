@@ -5,6 +5,7 @@ const { supabase } = require('../db/database');
 const twilioSvc = require('../services/twilio');
 const vapiSvc = require('../services/vapi');
 const elevenlabsSvc = require('../services/elevenlabs');
+const logger = require('../utils/logger');
 
 router.post('/internal/:id/transcript', async (req, res, next) => {
   try {
@@ -274,6 +275,7 @@ router.post('/test', async (req, res, next) => {
         );
       }
     } catch (callError) {
+      logger.error(`[llamadas/test] fallo al iniciar llamada: ${callError.message} | response: ${JSON.stringify(callError.response?.data || null)}`);
       await supabase
         .from('llamadas')
         .update({
@@ -284,6 +286,8 @@ router.post('/test', async (req, res, next) => {
         .eq('id', llamada.id);
       throw callError;
     }
+
+    logger.info(`[llamadas/test] respuesta del proveedor (${useElevenLabs ? 'elevenlabs' : (useVapi ? 'vapi' : 'voice-agent')}): ${JSON.stringify(call)}`);
 
     const providerCallId = call.conversation_id || call.call_sid || call.id || call.sid;
     if (useVapi && call.status === 'ended' && String(call.endedReason || '').startsWith('call.start.error')) {

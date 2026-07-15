@@ -8,6 +8,9 @@ const scheduler  = require('./services/scheduler');
 
 const app = express();
 
+// Railway (y la mayoría de PaaS) corren detrás de un proxy que agrega X-Forwarded-For
+app.set('trust proxy', 1);
+
 // ── Seguridad HTTP ────────────────────────────────────────────────
 app.use(helmet());
 app.use(cors({

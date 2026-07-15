@@ -95,6 +95,7 @@ function buildAssistantConfig(config = {}) {
     },
     server: buildServerConfig(),
     endCallMessage: config.cierre || 'Gracias por atender. Que tengas buen dia.',
+    endCallFunctionEnabled: true,
     maxDurationSeconds: Number(process.env.VAPI_MAX_DURATION_SECONDS || 300),
     backgroundDenoisingEnabled: true,
   };
@@ -120,6 +121,7 @@ function buildAssistantOverrides(config = {}) {
       language: process.env.VAPI_TRANSCRIBER_LANGUAGE || 'es',
     },
     server: buildServerConfig(),
+    endCallFunctionEnabled: true,
   };
 }
 
@@ -168,6 +170,7 @@ function buildSystemPrompt(cfg = {}) {
     'Antes de cerrar, confirma el acuerdo en una frase simple.',
     'Ante objeciones: ' + (cfg.objecion || 'escucha la situacion, valida brevemente y propone una fecha o plan de pago flexible.'),
     'Para cerrar: ' + (cfg.cierre || 'confirma fecha y monto acordado, agradece y despidete con amabilidad.'),
+    'En cuanto ya tengas lo que necesitas (un compromiso de pago, o confirmacion de que no es la persona buscada, o que no puede pagar y ya definiste la alternativa), despedite y terminá la llamada de inmediato usando la funcion para cortar. No sigas conversando ni agregues charla extra despues de despedirte.',
   ].join(' ');
 }
 
